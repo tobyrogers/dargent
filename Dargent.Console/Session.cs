@@ -25,32 +25,27 @@ public class Session(AgentSessionFactory agentSessionFactory)
             }
 
             agentSession.Ask(input);
-            await AnsiConsole.Status()
-                .Spinner(Spinner.Known.Dots)
-                .AutoRefresh(true)
-                .StartAsync("Thinking...", async ctx =>
+            AnsiConsole.MarkupLine("[grey]Thinking...[/]");
+            var lineBuilder = new StringBuilder();
+            await foreach (var response in agentSession.GetStreamingResponseAsync())
+            {
+                var split = response.Split('\n');
+                for (var i = 0; i < split.Length; i++)
                 {
-                    var lineBuilder = new StringBuilder();
-                    await foreach (var response in agentSession.GetStreamingResponseAsync())
+                    var line = split[i];
+                    if (i == 0)
                     {
-                        var split = response.Split('\n');
-                        for (var i = 0; i < split.Length; i++)
-                        {
-                            var line = split[i];
-                            if (i == 0)
-                            {
-                                lineBuilder.Append(line);
-                            }
-                            else
-                            {
-                                AnsiConsole.WriteLine(lineBuilder.ToString());
-                                lineBuilder.Clear();
-                                lineBuilder.Append(line);
-                            }
-                        }
+                        lineBuilder.Append(line);
                     }
-                    AnsiConsole.WriteLine(lineBuilder.ToString());
-                });
+                    else
+                    {
+                        AnsiConsole.WriteLine(lineBuilder.ToString());
+                        lineBuilder.Clear();
+                        lineBuilder.Append(line);
+                    }
+                }
+            }
+            AnsiConsole.WriteLine(lineBuilder.ToString());
         }
 
         AnsiConsole.WriteLine("Goodbye!");

@@ -4,7 +4,7 @@ using OpenAI;
 
 namespace Dargent.Core;
 
-public class AgentSessionFactory
+public class AgentSessionFactory(Func<ToolApprovalRequest, Task<ToolApprovalDecision>> approvalCallback)
 {
     public AgentSession CreateSession()
     {
@@ -22,6 +22,7 @@ public class AgentSessionFactory
             .AsIChatClient()
             .AsBuilder()
             .UseFunctionInvocation()
+            .Use(inner => new ToolApprovalMiddleware(inner, approvalCallback))
             .Build();
 
         // Configure tools
