@@ -1,19 +1,20 @@
 ﻿using System.Text;
+using System.Threading;
 using Dargent.Core;
 
 namespace Dargent.Console;
 
 public class Session(AgentSessionFactory agentSessionFactory)
 {
-    public async Task RunAsync()
+    public async Task RunAsync(CancellationToken cancellationToken)
     {
         var agentSession = agentSessionFactory.CreateSession();
 
         AnsiConsole.WriteLine("Argent session started\nType 'exit' to quit, or 'save' to force save the session.");
 
-        while (true)
+        while (cancellationToken.IsCancellationRequested == false)
         {
-            var input = AnsiConsole.Ask<string>("User >");
+            var input = await AnsiConsole.AskAsync<string>("User >", cancellationToken);
 
             if (string.IsNullOrWhiteSpace(input)) continue;
             if (input.Equals("exit", StringComparison.OrdinalIgnoreCase)) break;
@@ -31,7 +32,7 @@ public class Session(AgentSessionFactory agentSessionFactory)
                 .StartAsync("Thinking...", async ctx =>
                 {
                     var lineBuilder = new StringBuilder();
-                    await foreach (var response in agentSession.GetStreamingResponseAsync())
+                    await foreach (var response in agentSession.GetStreamingResponseAsync(cancellationToken))
                     {
                         var split = response.Split('\n');
                         for (var i = 0; i < split.Length; i++)
