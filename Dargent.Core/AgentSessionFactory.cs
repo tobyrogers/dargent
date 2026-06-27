@@ -4,9 +4,9 @@ using OpenAI;
 
 namespace Dargent.Core;
 
-public static class AgentSessionFactory
+public class AgentSessionFactory
 {
-    public static AgentSession Create()
+    public AgentSession CreateSession()
     {
         var modelRegistry = new ModelRegistry(GetAgentDirectory());
         var model = modelRegistry.GetDefaultModel();

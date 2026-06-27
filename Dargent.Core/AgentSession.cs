@@ -28,7 +28,7 @@ public class AgentSession : IDisposable
         _chatHistory.Add(new ChatMessage(ChatRole.User, question));
     }
 
-    public async Task Save()
+    public async Task SaveAsync()
     {
         await SessionManager.SaveSession(_sessionId, _chatHistory);
     }
@@ -43,6 +43,6 @@ public class AgentSession : IDisposable
         }
 
         _chatHistory.Add(new ChatMessage(ChatRole.Assistant, responseAggregator.ToString()));
-        await Save();
+        await SaveAsync();
     }
 }

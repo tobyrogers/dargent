@@ -3,11 +3,11 @@ using Dargent.Core;
 
 namespace Dargent.Console;
 
-public class Session
+public class Session(AgentSessionFactory agentSessionFactory)
 {
     public async Task RunAsync()
     {
-        var agentSession = AgentSessionFactory.Create();
+        var agentSession = agentSessionFactory.CreateSession();
 
         AnsiConsole.WriteLine("Argent session started\nType 'exit' to quit, or 'save' to force save the session.");
 
@@ -19,13 +19,14 @@ public class Session
             if (input.Equals("exit", StringComparison.OrdinalIgnoreCase)) break;
             if (input.Equals("save", StringComparison.OrdinalIgnoreCase))
             {
-                agentSession.Save();
+                await agentSession.SaveAsync();
                 AnsiConsole.WriteLine("Session saved.");
                 continue;
             }
 
             agentSession.Ask(input);
             await AnsiConsole.Status()
+                .Spinner(Spinner.Known.Dots)
                 .AutoRefresh(true)
                 .StartAsync("Thinking...", async ctx =>
                 {
@@ -48,7 +49,6 @@ public class Session
                             }
                         }
                     }
-
                     AnsiConsole.WriteLine(lineBuilder.ToString());
                 });
         }
