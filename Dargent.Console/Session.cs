@@ -8,31 +8,30 @@ public class Session(AgentSessionFactory agentSessionFactory)
 {
     public async Task RunAsync(CancellationToken cancellationToken)
     {
-        var agentSession = agentSessionFactory.CreateSession();
+        var agentSession = await agentSessionFactory.CreateSession(cancellationToken);
 
         AnsiConsole.WriteLine("Argent session started\nType 'exit' to quit, or 'save' to force save the session.");
 
         while (cancellationToken.IsCancellationRequested == false)
         {
-            var input = await AnsiConsole.AskAsync<string>("User >", cancellationToken);
+            var prompt = await AnsiConsole.AskAsync<string>("User >", cancellationToken);
 
-            if (string.IsNullOrWhiteSpace(input)) continue;
-            if (input.Equals("exit", StringComparison.OrdinalIgnoreCase)) break;
-            if (input.Equals("save", StringComparison.OrdinalIgnoreCase))
+            if (string.IsNullOrWhiteSpace(prompt)) continue;
+            if (prompt.Equals("exit", StringComparison.OrdinalIgnoreCase)) break;
+            if (prompt.Equals("save", StringComparison.OrdinalIgnoreCase))
             {
                 await agentSession.SaveAsync();
                 AnsiConsole.WriteLine("Session saved.");
                 continue;
             }
 
-            agentSession.Ask(input);
             await AnsiConsole.Status()
                 .Spinner(Spinner.Known.Dots)
                 .AutoRefresh(true)
                 .StartAsync("Thinking...", async ctx =>
                 {
                     var lineBuilder = new StringBuilder();
-                    await foreach (var response in agentSession.GetStreamingResponseAsync(cancellationToken))
+                    await foreach (var response in agentSession.AskAsync(prompt, cancellationToken))
                     {
                         var split = response.Split('\n');
                         for (var i = 0; i < split.Length; i++)

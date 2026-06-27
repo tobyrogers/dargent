@@ -1,12 +1,14 @@
 using System.ClientModel;
+using System.Threading.Tasks;
 using Dargent.Core.Tools;
+using Microsoft.Agents.AI;
 using OpenAI;
 
 namespace Dargent.Core;
 
 public class AgentSessionFactory
 {
-    public AgentSession CreateSession()
+    public async Task<DargentSession> CreateSession(CancellationToken cancellationToken = default)
     {
         var modelRegistry = new ModelRegistry(GetAgentDirectory());
         var model = modelRegistry.GetDefaultModel();
@@ -18,26 +20,31 @@ public class AgentSessionFactory
                 Endpoint = new Uri(model.GatewayUrl)
             });
 
-        var client = openAiClient.GetChatClient(model.Name)
+        var chatClient = openAiClient.GetChatClient(model.Name)
             .AsIChatClient()
             .AsBuilder()
             .UseFunctionInvocation()
             .Build();
 
-        // Configure tools
-        var chatOptions = new ChatOptions
+        var chatClientAgentOptions = new ChatClientAgentOptions()
         {
-            Tools = new List<AITool>
+            ChatOptions = new ChatOptions
             {
-                AIFunctionFactory.Create(AgentTools.ReadFile),
-                AIFunctionFactory.Create(AgentTools.WriteFile),
-                AIFunctionFactory.Create(AgentTools.RunTerminalCommand)
+                Tools = new List<AITool>
+                {
+                    AIFunctionFactory.Create(AgentTools.ReadFile),
+                    AIFunctionFactory.Create(AgentTools.WriteFile),
+                    AIFunctionFactory.Create(AgentTools.RunTerminalCommand)
+                }
             }
         };
 
-        IList<ChatMessage> chatHistory = new List<ChatMessage>();
-        chatHistory.Add(new ChatMessage(ChatRole.System,
-            "You are an AI coding agent named Dargent. You can read/write files and run terminal commands to help the user with coding tasks. Always use the tools when needed."));
+        AIAgent aiAgent = chatClient.AsAIAgent(chatClientAgentOptions);
+        
+
+        
+        // chatHistory.Add(new ChatMessage(ChatRole.System,
+        //     "You are an AI coding agent named Dargent. You can read/write files and run terminal commands to help the user with coding tasks. Always use the tools when needed."));
         
         //     Console.WriteLine("Loaded previous session history.");
         //     foreach (var msg in history)
@@ -50,8 +57,8 @@ public class AgentSessionFactory
         //                     Console.WriteLine($"[Tool Call: {fn.Name}]");
         //         }
 
-
-        return new AgentSession(client, chatOptions, chatHistory);
+        var agentSession = await aiAgent.CreateSessionAsync(cancellationToken);
+        return new DargentSession(aiAgent, agentSession);
     }
 
     private static string GetAgentDirectory()
