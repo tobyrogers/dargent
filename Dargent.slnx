@@ -1,11 +1,11 @@
 ﻿<Solution>
-	<Folder Name="/_SolutionItems/">
-		<File Path="LICENCE" />
-		<File Path="README.md" />
-		<File Path=".gitignore" />
-	</Folder>
-	<Project Path="Dargent.Console\Dargent.Console.csproj"/>
-	<Project Path="Dargent.Console.Test\Dargent.Console.Test.csproj"/>
-	<Project Path="Dargent.Core\Dargent.Core.csproj"/>
-	<Project Path="Dargent.Core.Test\Dargent.Core.Test.csproj"/>	
+    <Folder Name="/_SolutionItems/">
+        <File Path="LICENCE"/>
+        <File Path="README.md"/>
+        <File Path=".gitignore"/>
+    </Folder>
+    <Project Path="Dargent.Console\Dargent.Console.csproj"/>
+    <Project Path="Dargent.Console.Test\Dargent.Console.Test.csproj"/>
+    <Project Path="Dargent.Core\Dargent.Core.csproj"/>
+    <Project Path="Dargent.Core.Test\Dargent.Core.Test.csproj"/>
 </Solution>
