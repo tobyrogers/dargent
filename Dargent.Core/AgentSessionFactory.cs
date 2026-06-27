@@ -26,26 +26,26 @@ public class AgentSessionFactory
             .UseFunctionInvocation()
             .Build();
 
-        var chatClientAgentOptions = new ChatClientAgentOptions()
+        var chatClientAgentOptions = new ChatClientAgentOptions
         {
             ChatOptions = new ChatOptions
             {
                 Tools = new List<AITool>
                 {
-                    AIFunctionFactory.Create(AgentTools.ReadFile),
-                    AIFunctionFactory.Create(AgentTools.WriteFile),
-                    AIFunctionFactory.Create(AgentTools.RunTerminalCommand)
+                    new ApprovalRequiredAIFunction(AIFunctionFactory.Create(AgentTools.ReadFile)),
+                    new ApprovalRequiredAIFunction(AIFunctionFactory.Create(AgentTools.WriteFile)),
+                    new ApprovalRequiredAIFunction(AIFunctionFactory.Create(AgentTools.RunTerminalCommand))
                 }
             }
         };
 
-        AIAgent aiAgent = chatClient.AsAIAgent(chatClientAgentOptions);
-        
 
-        
+        AIAgent aiAgent = chatClient.AsAIAgent(chatClientAgentOptions);
+
+
         // chatHistory.Add(new ChatMessage(ChatRole.System,
         //     "You are an AI coding agent named Dargent. You can read/write files and run terminal commands to help the user with coding tasks. Always use the tools when needed."));
-        
+
         //     Console.WriteLine("Loaded previous session history.");
         //     foreach (var msg in history)
         //         if (msg.Role == ChatRole.User || msg.Role == ChatRole.Assistant)
@@ -63,11 +63,8 @@ public class AgentSessionFactory
 
     private static string GetAgentDirectory()
     {
-        string agentDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".dargent");
-        if (!Directory.Exists(agentDirectory))
-        {
-            Directory.CreateDirectory(agentDirectory);
-        }
+        var agentDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".dargent");
+        if (!Directory.Exists(agentDirectory)) Directory.CreateDirectory(agentDirectory);
         return agentDirectory;
     }
 }
