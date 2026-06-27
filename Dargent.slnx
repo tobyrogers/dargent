@@ -1,6 +1,6 @@
 ﻿<Solution>
     <Folder Name="/_SolutionItems/">
-        <File Path="LICENCE"/>
+        <File Path="LICENSE"/>
         <File Path="README.md"/>
         <File Path=".gitignore"/>
     </Folder>
