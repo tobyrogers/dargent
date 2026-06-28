@@ -2,13 +2,41 @@
 
 namespace Dargent.Core;
 
+public enum OutputType
+{
+    None,
+    Normal,
+    Error,
+    Warning,
+}
+
 public interface IOutput
 {
-    public void Write(string text);
+    Task Spinner(string status, Func<Task> action);
     
-    public Task Stream(IAsyncEnumerable<string> stream);
-    
-    public bool Approve(string text);
+    void Write(string text, OutputType outputType = OutputType.Normal);
 
-    public Task<string> Prompt(CancellationToken cancellationToken);
+    Task<bool> Approve(string text, CancellationToken cancellationToken = default);
+
+    Task<string> Prompt(string prompt, CancellationToken cancellationToken = default);
+
+    void DrawSeparator();
+}
+
+public static class OutputExtensions
+{
+    public static void WriteNormal(this IOutput output, string text)
+    {
+        output.Write(text, OutputType.Normal);
+    }
+
+    public static void WriteError(this IOutput output, string text)
+    {
+        output.Write(text, OutputType.Error);
+    }
+
+    public static void WriteWarning(this IOutput output, string text)
+    {
+        output.Write(text, OutputType.Warning);
+    }
 }
