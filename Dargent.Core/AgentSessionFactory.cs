@@ -6,7 +6,7 @@ using OpenAI;
 
 namespace Dargent.Core;
 
-public class AgentSessionFactory
+public class AgentSessionFactory(IOutput output)
 {
     public async Task<DargentSession> CreateSession(CancellationToken cancellationToken = default)
     {
@@ -58,7 +58,7 @@ public class AgentSessionFactory
         //         }
 
         var agentSession = await aiAgent.CreateSessionAsync(cancellationToken);
-        return new DargentSession(aiAgent, agentSession);
+        return new DargentSession(aiAgent, agentSession, output);
     }
 
     private static string GetAgentDirectory()

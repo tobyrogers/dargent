@@ -1,18 +1,25 @@
 ﻿using System.Runtime.CompilerServices;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Microsoft.Agents.AI;
-using Microsoft.Extensions.FileProviders;
 
 namespace Dargent.Core;
 
-public class DargentSession(AIAgent aiAgent, AgentSession agentSession)
+public class DargentSession
+    (AIAgent aiAgent, AgentSession agentSession, IOutput output)
 {
     private readonly string _sessionId = DateTime.Now.ToString("yyyyMMdd-HHmmss");
 
     public async Task SaveAsync()
     {
-        JsonElement serializedSession = await aiAgent.SerializeSessionAsync(agentSession);
-        Console.WriteLine(serializedSession.ToString());       
+        var xx = JsonSerializer.Serialize(agentSession.StateBag, new JsonSerializerOptions(JsonSerializerDefaults.Web){WriteIndented = true});
+        
+        // JsonElement serializedSession = await aiAgent.SerializeSessionAsync(agentSession, new JsonSerializerOptions(AgentJsonUtilities.DefaultOptions)
+        // {
+        //     WriteIndented = true, 
+        //     //DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+        // });
+        Console.WriteLine(xx);       
     }
 
     public async IAsyncEnumerable<string> AskAsync(string prompt, [EnumeratorCancellation] CancellationToken cancellationToken = default)
@@ -26,7 +33,6 @@ public class DargentSession(AIAgent aiAgent, AgentSession agentSession)
             
             foreach (var content in response.Contents)
             {
-                yield return $"{content.GetType().Name}: ";
                 switch (content)
                 {
                     case ToolApprovalRequestContent toolApprovalRequestContent:
@@ -34,10 +40,12 @@ public class DargentSession(AIAgent aiAgent, AgentSession agentSession)
                         switch (toolCall)
                         {
                             case FunctionCallContent functionCallContent:
-                                yield return $"{functionCallContent.Name}";
+                                var approved = output.Approve(functionCallContent.Name);
+                                await aiAgent.RunAsync(new ChatMessage(ChatRole.User, [toolApprovalRequestContent.CreateResponse(approved)]), session: agentSession, cancellationToken: cancellationToken);
                                 break;
-                                // await aiAgent.RunAsync(new ChatMessage(ChatRole.User,
-                                // [toolApprovalRequestContent.CreateResponse(true)]), session: agentSession);
+                            default:
+                                yield return $"Unknown tool call type.{nameof(toolCall)}";
+                                break;
                         }
                         break;
                     case FunctionCallContent:
@@ -47,11 +55,13 @@ public class DargentSession(AIAgent aiAgent, AgentSession agentSession)
                         break;
                     case UsageContent usageContent:
                         var usage = usageContent.Details;
-                        yield return $"Tokens. In: {usage.InputTokenCount}, Out: {usage.OutputTokenCount}, Total: {usage.TotalTokenCount} ";
+                        yield return $"\nTokens. In: {usage.InputTokenCount}, Out: {usage.OutputTokenCount}, Total: {usage.TotalTokenCount}\n\n";
+                        break;
+                    default:
+                        yield return $"Unknown content type.{nameof(content)}";
                         break;
                 }
             }
-            yield return "\n"; 
             
             // yield return JsonSerializer.Serialize(response) + ",";
 
