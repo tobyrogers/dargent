@@ -38,7 +38,7 @@ public class ConsoleOutput : IOutput
     {
         await AnsiConsole.Status()
             .Spinner(Spectre.Console.Spinner.Known.Dots)
-            .StartAsync("Thinking...", _ => action());
+            .StartAsync(status, _ => action());
     }
 
     public async Task<bool> Approve(string text, CancellationToken cancellationToken)
@@ -48,13 +48,17 @@ public class ConsoleOutput : IOutput
 
     public async Task<string> Prompt(string prompt, CancellationToken cancellationToken)
     {
-        Write("\n");
-        DrawSeparator();
         return await AnsiConsole.AskAsync<string>(prompt, cancellationToken);
     }
 
-    public void DrawSeparator()
+    public void DrawSeparator(string usage)
     {
-        AnsiConsole.Write(new Rule());
+        if (string.IsNullOrWhiteSpace(usage))
+        {
+            AnsiConsole.Write(new Rule());
+            return;
+        }
+        
+        AnsiConsole.Write(new Rule($"[blue]{usage}[/]"){ Justification = Justify.Left });
     }
 }

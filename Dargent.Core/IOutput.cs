@@ -20,7 +20,7 @@ public interface IOutput
 
     Task<string> Prompt(string prompt, CancellationToken cancellationToken = default);
 
-    void DrawSeparator();
+    void DrawSeparator(string usage);
 }
 
 public static class OutputExtensions
